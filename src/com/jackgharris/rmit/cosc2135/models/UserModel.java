@@ -4,27 +4,28 @@ package com.jackgharris.rmit.cosc2135.models;
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
 import com.jackgharris.rmit.cosc2135.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.exceptions.InvalidFullnameException;
+import com.jackgharris.rmit.cosc2135.exceptions.InvalidPasswordException;
+import com.jackgharris.rmit.cosc2135.exceptions.InvalidUsernameException;
+import com.jackgharris.rmit.cosc2135.intefaces.Savable;
 
 import java.io.*;
+import java.util.Objects;
 
 //**** START CLASS ****\\
-public class UserModel{
+public class UserModel extends Model implements Savable {
 
     //Private Class Variables
     //-------------------------------------------------------------------------------------------
     //Here we declare our class wide instance variables, in this case we have two arrays, users and errors, both are final
     //users array, is final and created once by the constructor
-    private final CustomArray users;
-    //users array, is final and created once by the constructor
-    private final CustomArray errors;
+    private CustomArray users;
 
     //**** CONSTRUCTOR ****\\
     //main constructor method for the UserModel class
     public UserModel() {
-        //initialize the Errors array as a new array of Strings
-        this.errors = new CustomArray(String.class);
         //initialize the Users array to the value of the private loadUserAccounts method
-        this.users = this.loadUserAccounts();
+        this.load("users.csv");
     }
 
     //**** CHECK USERNAME METHOD ****\\
@@ -67,9 +68,8 @@ public class UserModel{
     //**** VALIDATE NEW USERNAME ****\\
     //this method validates a new username request, it takes proposed username as a string and checks to make sure no
     //names match it, if there it a match it returns true
-    public boolean validateNewUsername(String username){
-        //declare the outcome as false by default
-        boolean outcome = false;
+    public void validateNewUsername(String username) throws InvalidUsernameException{
+
         //declare the unique match to false by default
         boolean uniqueMatch  = false;
 
@@ -90,43 +90,32 @@ public class UserModel{
         }
 
         //finally we check if the unique match is false and the username is not null then the outcome is true
-        if(!uniqueMatch && !username.isBlank()){
-            outcome = true;
+        if(uniqueMatch || Objects.requireNonNull(username).isBlank()){
+            throw new InvalidUsernameException();
         }
-
-        //return the outcome of this check
-        return outcome;
     }
 
     //**** VALIDATE NEW PASSWORD ****\\
     //this method is our password validator and ensuring that a password meets the criteria as stated in this method
-    public boolean validatePassword(String password){
-        //create out boolean outcome method, false by default
-        boolean outcome =  false;
+    public void validatePassword(String password) throws InvalidPasswordException {
+
         //check if the password is not null or blank
-        if(password != null && !password.isBlank()){
+        if(password == null || password.isBlank()){
             //if not then this is a valid password and set the outcome to true
-            outcome = true;
+            throw new InvalidPasswordException();
         }
-        //finally return the outcome result
-        return outcome;
+
     }
 
     //**** VALIDATE NEW FULLNAME ****\\
     //this model method validates the fullname input string and returns true or false
-    public boolean validateFullname(String fullname){
-
-        //create our outcome variable, false by default
-        boolean outcome = false;
+    public void validateFullname(String fullname) throws InvalidFullnameException {
 
         //check if the full name is not null and is not blank
-        if(fullname != null && !fullname.isBlank()){
+        if(fullname == null || fullname.isBlank()){
             //if so set the outcome to true;
-            outcome = true;
+            throw new InvalidFullnameException();
         }
-
-        //finally return the outcome of this check
-        return outcome;
     }
 
     //**** CREATE NEW USER ACCOUNT ****\\
@@ -135,53 +124,29 @@ public class UserModel{
         //create a new user object in the this.users array with the key as the users username
         this.users.add(new User((String)account.getValue("username"),(String)account.getValue("password"),(String)account.getValue("fullname"),Integer.parseInt((String) account.getValue("registrationDate")),Boolean.parseBoolean((String) account.getValue("isAdmin"))),(String) account.getValue("username"));
         //update the accounts CSV file on new account creation with the private this.saveUserAccounts method
-        this.saveUserAccounts(this.users);
+        this.save("users.csv");
     }
 
-    //**** LOAD USER ACCOUNTS ****\\
-    //this method loads the user accounts from the users.csv file
-    private CustomArray loadUserAccounts() {
+    //**** GET ALL USERS ****\\
+    //returns a string array of all the usernames in the users array
+    public String getAllUsers(){
+        //create the outcome string
+        String outcome = "";
 
-        //specify path location
-        String filePath = "users.csv";
-
-        //create an array of users with the accepting object the User.class
-        CustomArray users = new CustomArray(User.class);
-
-        //create a try catch loop to catch any errors
-        try {
-            //create a instance of the buffered reader
-            BufferedReader br = new BufferedReader(new FileReader(filePath));
-
-            //create a line String variable
-            String line;
-            //start a while loop to get the lines in if they are not null
-            while((line = br.readLine()) != null){
-                //ignore any lines that have the \\ comment marker
-                if(!line.contains("//")){
-                    //split the lines values apart by the ,
-                    String[] values = line.split(",");
-                    //create a user using the new values array and convert the
-                    users.add(new User(values[0],values[1],values[2],Integer.parseInt(values[3]),Boolean.parseBoolean(values[4])),values[0]);
-                }
-            }
-            //finally close our buffered reader
-            br.close();
-
-        } catch (IOException e) {
-            //if we catch any errors add them to the this.errors file
-            this.errors.add("Cannot load users.csv file, please check you have a csv file in this folder called '" +
-                    "users.csv' and restart the program\nJava Error: "+e.toString(),"error");
+        //create our counter i
+        int i  = 0;
+        //create our while loop to count over each of our users
+        while(i< this.users.length()){
+            //add the user name to the outcome separated by a comers
+            outcome += this.users.getKeys()[i]+",";
+            //increase the counter and repeat
+            i++;
         }
-
-        //return the new users array
-        return users;
+        return outcome;
     }
 
-
-    //**** SAVE USER ACCOUNTS ****\\
-    //this method accepts an array of user accounts and saves them to a file
-    private void saveUserAccounts(CustomArray accounts){
+    @Override
+    public void save(String path) {
 
         //set the tag for the file
         String tag = "Main Users CSV file";
@@ -189,7 +154,7 @@ public class UserModel{
         //open a try catch block to catch any errors that have been thrown
         try {
             // Creates a FileWriter
-            FileWriter file = new FileWriter("users.csv");
+            FileWriter file = new FileWriter(path);
 
             // Creates a BufferedWriter
             BufferedWriter output = new BufferedWriter(file);
@@ -221,31 +186,39 @@ public class UserModel{
         }
     }
 
-    //**** GET ALL USERS ****\\
-    //returns a string array of all the usernames in the users array
-    public String getAllUsers(){
-        //create the outcome string
-        String outcome = "";
+    @Override
+    public void load(String path) {
 
-        //create our counter i
-        int i  = 0;
-        //create our while loop to count over each of our users
-        while(i< this.users.length()){
-            //add the user name to the outcome separated by a comers
-            outcome += this.users.getKeys()[i]+",";
-            //increase the counter and repeat
-            i++;
+        //create an array of users with the accepting object the User.class
+        CustomArray users = new CustomArray(User.class);
+
+        //create a try catch loop to catch any errors
+        try {
+            //create a instance of the buffered reader
+            BufferedReader br = new BufferedReader(new FileReader(path));
+
+            //create a line String variable
+            String line;
+            //start a while loop to get the lines in if they are not null
+            while((line = br.readLine()) != null){
+                //ignore any lines that have the \\ comment marker
+                if(!line.contains("//")){
+                    //split the lines values apart by the ,
+                    String[] values = line.split(",");
+                    //create a user using the new values array and convert the
+                    users.add(new User(values[0],values[1],values[2],Integer.parseInt(values[3]),Boolean.parseBoolean(values[4])),values[0]);
+                }
+            }
+            //finally close our buffered reader
+            br.close();
+
+        } catch (IOException e) {
+            //if we catch any errors add them to the this.errors file
+            this.errors.add("Cannot load users.csv file, please check you have a csv file in this folder called '" +
+                    "users.csv' and restart the program\nJava Error: "+e.toString(),"error");
         }
-        return outcome;
+
+        //return the new users array
+        this.users =  users;
     }
-
-    //**** GET ERRORS ****\\
-    //this method returns an array of errors back to the controller when called
-    public CustomArray getErrors(){
-        //return this errors
-        return this.errors;
-    }
-
-
-
 }
