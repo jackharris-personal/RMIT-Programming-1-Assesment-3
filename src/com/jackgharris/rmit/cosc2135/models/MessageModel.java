@@ -4,25 +4,22 @@ package com.jackgharris.rmit.cosc2135.models;
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
 import com.jackgharris.rmit.cosc2135.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.intefaces.Savable;
 
 import java.io.*;
 
 //**** START CLASS ****\\
-public class MessageModel{
+public class MessageModel extends Model implements Savable {
 
     //Private Class Variables
     //-------------------------------------------------------------------------------------------
     //Here we declare our class wide instance variables, in this case we have two arrays, messages and errors, both are final
-    private final CustomArray messages;
-    private final CustomArray errors;
+    private CustomArray messages;
 
     //**** CONSTRUCTOR ****\\
     public MessageModel(){
-        //initialize our errors array to a new array of the Strings class
-        this.errors = new CustomArray(String.class);
         //initialize our messages array to a new CustomArray of the Message class
-        this.messages = this.loadUserMessages("message.csv");
-
+        this.load("message.csv");
     }
 
     //**** NEW MESSAGE METHOD ****\\
@@ -32,7 +29,7 @@ public class MessageModel{
         //plus append the unix time in seconds to avoid conflicts
         this.messages.add(new Message(sender,reciver,message,System.currentTimeMillis()),"{{message}}"+System.currentTimeMillis());
         //finally save the userMessages to file with the private save function
-        this.saveUserMessages();
+        this.save("message.csv");
     }
 
     //**** GET USER MESSAGE ****\\
@@ -64,10 +61,53 @@ public class MessageModel{
         return response;
     }
 
-    //**** LOAD USER MESSAGES ****\\
-    //this method loads the users messages from the message.csv file into the class this.messages array
-    public CustomArray loadUserMessages(String path) {
 
+    @Override
+    public void save(String path) {
+
+        //append the tag to the top of the file
+        String tag = "Main Message File";
+
+        //open a try catch block to attempt to save the files
+        try {
+            // Creates a FileWriter
+            FileWriter file = new FileWriter(path);
+
+            // Creates a BufferedWriter and parse it the file writer
+            BufferedWriter output = new BufferedWriter(file);
+
+            //write the tags to the top of the file
+            output.write("//Tags: "+tag);
+            //go to a new line
+            output.newLine();
+
+            //create a i counting variable
+            int i = 0;
+            //start a while loop to loop over all the messages
+            while(i<this.messages.length()){
+                //write all the data to the output using the getters in the message object
+                output.write(((Message)this.messages.getValues()[i]).getSender()+","
+                        +((Message)this.messages.getValues()[i]).getReciver()+","
+                        +((Message)this.messages.getValues()[i]).getMessage()+","
+                        +((Message)this.messages.getValues()[i]).getDateTime());
+                //after we haave done that go to the next line
+                output.newLine();
+                //increase our count and write the next message to the file
+                i++;
+            }
+
+            // Closes the writer
+            output.close();
+
+        } catch (IOException e) {
+            //if we catch an exception add it to the list of errors and append the e.tostring error
+            this.errors.add("Cannot save messages.csv file, please check you have a csv file in this folder called '" +
+                    "messages.csv' and restart the program\nJava Error: "+e.toString(),"error");
+        }
+    }
+
+    @Override
+    public void load(String path) {
         //create a new array of message
         CustomArray messages = new CustomArray(Message.class);
 
@@ -93,65 +133,13 @@ public class MessageModel{
             br.close();
 
             if(this.errors.arrayKeyExists("error")){
-            this.errors.delete("error");
+                this.errors.delete("error");
             }
         } catch (IOException e) {
             //finally if we catch a error add it to the errors array and append the e.toString error
             this.errors.add("Cannot load message.csv file, please check your path file and try again\nPath:"+path+"\nJava Error: "+e.toString(),"error");
         }
 
-        return messages;
-
-    }
-
-    //**** SAVE USER MESSAGES ****\\
-    //the save user message array is called when a new message is sent and is used to save all the messages to the file
-    private void saveUserMessages(){
-
-        //append the tag to the top of the file
-        String tag = "Main Message File";
-
-        //open a try catch block to attempt to save the files
-        try {
-            // Creates a FileWriter
-            FileWriter file = new FileWriter("message.csv");
-
-            // Creates a BufferedWriter and parse it the file writer
-            BufferedWriter output = new BufferedWriter(file);
-
-            //write the tags to the top of the file
-            output.write("//Tags: "+tag);
-            //go to a new line
-            output.newLine();
-
-            //create a i counting variable
-            int i = 0;
-            //start a while loop to loop over all the messages
-            while(i<this.messages.length()){
-                //write all the data to the output using the getters in the message object
-                output.write(((Message)this.messages.getValues()[i]).getSender()+","
-                +((Message)this.messages.getValues()[i]).getReciver()+","
-                +((Message)this.messages.getValues()[i]).getMessage()+","
-                +((Message)this.messages.getValues()[i]).getDateTime());
-                //after we haave done that go to the next line
-                output.newLine();
-                //increase our count and write the next message to the file
-                i++;
-            }
-
-            // Closes the writer
-            output.close();
-
-        } catch (IOException e) {
-            //if we catch an exception add it to the list of errors and append the e.tostring error
-            this.errors.add("Cannot save messages.csv file, please check you have a csv file in this folder called '" +
-                    "messages.csv' and restart the program\nJava Error: "+e.toString(),"error");
-        }
-    }
-
-    //**** GET ERRORS METHOD ****\\
-    //returns the array of erros to a calling controller
-    public CustomArray getErrors(){
-        return this.errors;
+        this.messages =  messages;
     }
 }
