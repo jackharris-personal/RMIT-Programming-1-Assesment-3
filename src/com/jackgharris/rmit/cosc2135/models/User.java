@@ -3,7 +3,7 @@ package com.jackgharris.rmit.cosc2135.models;
 
 //**** START CLASS ****\\
 //this is the single instance of the user accounts that are created and managed by the UsersModel
-public class User {
+public class User extends Model{
 
     //set private final variables, these are instance variables that are final as they are set once by the constructor and never changed
     //String Username
