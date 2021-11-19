@@ -7,6 +7,7 @@ package com.jackgharris.rmit.cosc2135.controllers;
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
 import com.jackgharris.rmit.cosc2135.core.CustomArray;
 import com.jackgharris.rmit.cosc2135.core.WhatsAppConsoleEdition;
+import com.jackgharris.rmit.cosc2135.exceptions.InvalidViewException;
 import com.jackgharris.rmit.cosc2135.models.MessageModel;
 import com.jackgharris.rmit.cosc2135.models.UserModel;
 import com.jackgharris.rmit.cosc2135.views.DashboardView;
@@ -14,7 +15,7 @@ import com.jackgharris.rmit.cosc2135.views.DashboardView;
 
 //**** CLASS START ****\\
 //Now we have imported our classes and declared our package name space we start our class contents
-public class DashboardController{
+public class DashboardController extends Controller{
 
     //Private Class Variables
     //-------------------------------------------------------------------------------------------
@@ -23,14 +24,9 @@ public class DashboardController{
     private final MessageModel messageModel;
     //UserModel private variable is used to retrieve all our users usernames and display them in the message user selector view
     private final UserModel userModel;
-    //Declare our view
-    private final DashboardView view;
-    //declare our instance of the main application
-    private final WhatsAppConsoleEdition whatsAppConsoleEdition;
     //declare our current view string
     private String currentView;
-    //declare our private array request instance variable, stores all data that is sent back from the view
-    private CustomArray request;
+
 
 
     //**** DASHBOARD CONTROLLER CONSTRUCTOR METHOD ****\\
@@ -38,8 +34,6 @@ public class DashboardController{
     //of models it will load the model from the WhatsAppConsoleEdition, this is what allows us to have a single instance of each model.
     public DashboardController(WhatsAppConsoleEdition whatsAppConsoleEdition, UserModel userModel, MessageModel messageModel) {
 
-        //initialize the request array with a new Custom array set to accepts the String.class and children of it
-        this.request = new CustomArray(String.class);
         //initialize the whatsAppConsoleEdition that's been parsed in via the constructor to the class variable of whatsAppConsoleEdition, this allows us
         //to call whatsAppConsoleEdition functions such as update view.
         this.whatsAppConsoleEdition = whatsAppConsoleEdition;
@@ -66,9 +60,10 @@ public class DashboardController{
     //this is our main processing method, its job is to take the input provided by the reviews in the main this.request variable
     //and perform any model calls required to for fill the request of that view. We also first extract the user input from the
     //request at the start as well as create our response array ready to be returned back to the view.
-    public void processInput() {
+    @Override
+    public void processInput(CustomArray request) {
         //First we set the input string to the request input string as provided by the View
-        String input = (String) this.request.getValue("input");
+        String input = (String) request.getValue("input");
 
         //Secondly we create our response array that we will be returning back to the view
         CustomArray response = new CustomArray(String.class);
@@ -93,7 +88,7 @@ public class DashboardController{
                 //finally rerender our view and parse the response we have created
                 this.whatsAppConsoleEdition.updateView(response);
 
-            //step 2 we check if our input matches 2, that would indicate we logout and proceed with the logout logic
+                //step 2 we check if our input matches 2, that would indicate we logout and proceed with the logout logic
             }else if(input.matches("2")){
                 //set the current user back to null in the main application whatsAppConsoleEdition
                 this.whatsAppConsoleEdition.setCurrentUser(null);
@@ -116,7 +111,7 @@ public class DashboardController{
                 //add the invalid selection error to the response
                 response.add("invalid selection", "error");
                 //recall our view update and parse our build response
-                this.updateView(response);
+                this.whatsAppConsoleEdition.updateView(response);
             }
         }
 
@@ -131,7 +126,7 @@ public class DashboardController{
                 //recall the whatsAppConsoleEdition updateview method and parse the blank response
                 this.whatsAppConsoleEdition.updateView(response);
 
-            //else we check if they have entered one, if so this indicates they wish to select a user to message
+                //else we check if they have entered one, if so this indicates they wish to select a user to message
             }else if(input.matches("1")){
                 //add the current user to the response
                 response.add(this.whatsAppConsoleEdition.getCurrentUser().getUsername(),"currentUser");
@@ -142,8 +137,8 @@ public class DashboardController{
                 //finally reparse our response to the view and call the whatsAppConsoleEdition update view method
                 this.whatsAppConsoleEdition.updateView(response);
 
-            //else if we have reached this stage of the code it indicates the user did you select either of the valid options
-            //so we redraw the view as it was and parse a invalid option selected error
+                //else if we have reached this stage of the code it indicates the user did you select either of the valid options
+                //so we redraw the view as it was and parse a invalid option selected error
             }else {
                 //parse our invalid option selected error to the response
                 response.add("invalid option selection","error");
@@ -171,13 +166,12 @@ public class DashboardController{
                 //adds the messages to the response before returning it.
                 response = this.messageModel.getMessages(this.whatsAppConsoleEdition.getCurrentUser().getUsername(), input, response);
                 //finally we recall our updateview method in the whatsAppConsoleEdition and parse this build response
-                this.whatsAppConsoleEdition.updateView(response);
             }else{
                 //else this would indicate we have not selected a valid username and so we parse the invalid username selected error to the respone
                 response.add("invaid username selected","error");
                 //and recall this same view with that error parsed
-                this.whatsAppConsoleEdition.updateView(response);
             }
+            this.whatsAppConsoleEdition.updateView(response);
         }
 
         //**** MESSAGE VIEW PROCESSING ****\\
@@ -195,7 +189,7 @@ public class DashboardController{
                 //recall our whatsAppConsoleEdition updateView and parse this response
                 this.whatsAppConsoleEdition.updateView(response);
 
-            //else we check if they press two, this would indicate they want to send a message to the selected user
+                //else we check if they press two, this would indicate they want to send a message to the selected user
             }else if(input.matches("2")){
                 //add the send message tag with the value of true to the response, this is used by the view to render differnt text
                 //this flag is also needed as it indicates that we when present we need to process a send message not just display the message chain.
@@ -210,9 +204,9 @@ public class DashboardController{
             }else {
                 //else if they have not option 1 or 2 we check if we have the send message flag send as well, if so then we call the messageModel, sendMessage method
                 //and parse our required params
-                if (this.request.arrayKeyExists("{{send-message}}")) {
+                if (request.arrayKeyExists("{{send-message}}")) {
                     //if true call our newMessage method and parse it the current user, targetUser, and message AKA the input
-                    this.messageModel.newMessage(this.whatsAppConsoleEdition.getCurrentUser().getUsername(), (String) this.request.getValue("messageTarget"), input);
+                    this.messageModel.newMessage(this.whatsAppConsoleEdition.getCurrentUser().getUsername(), (String) request.getValue("messageTarget"), input);
                 }
                 //else if we dont have that flag we are going to assume a invalid section has been made and reparse the data to the view
                 //with the error invalid section
@@ -233,7 +227,7 @@ public class DashboardController{
         if(this.currentView.matches("import") ){
             if(this.whatsAppConsoleEdition.getCurrentUser().getAdminStatus()) {
                 if (!input.isBlank()) {
-                    this.messageModel.loadUserMessages(input);
+                    this.messageModel.load(input);
                     if (!this.messageModel.getErrors().arrayKeyExists("error")) {
                         response.add("csv file imported successfully", "importSuccess");
                     } else {
@@ -255,7 +249,11 @@ public class DashboardController{
     //This method is called if this controller is active and any controller has called the this.app.updateView method, this triggers
     //a re rendering of the view in the applicable controller, Update View takes a response array of strings as a input but can also
     //receive a null input if no data needs to be send to the front end.
-    public void updateView(CustomArray response) {
+    @Override
+    public void updateView(CustomArray response) throws InvalidViewException {
+        //Step 0:
+        //create the main request to build our request data
+        CustomArray request = new CustomArray(String.class);
         //Step 1:
         //firstly we check if we have a valid response or if no response was parsed
         if(response == null){
@@ -278,44 +276,42 @@ public class DashboardController{
         //Step 3A: render the home view and get user input request
         if(this.currentView.matches("home")){
             //set the current request to the result of the home view and parse the response build by a processor
-            this.request = this.view.home(response);
+            request = ((DashboardView)this.view).home(response);
             //recall the process input method to calculate any new input from the user
-            this.processInput();
-        }
+            this.processInput(request);
 
-        //Step 3B: render the all users view and get input request
-        if(this.currentView.matches("allusers")){
+        }else if(this.currentView.matches("allusers")){
+            //Step 3B: render the all users view and get input request
 
             //set the current request to the result of the allusers view and parse the response build by a processor
-            this.request = this.view.allUsers(response);
+            request = ((DashboardView)this.view).allUsers(response);
             //recall the process input method to calculate any new input from the user
-            this.processInput();
-        }
+            this.processInput(request);
 
-        //Step 3C: render the select user view and get user input request
-        if(this.currentView.matches("selectUser")){
+        }else if(this.currentView.matches("selectUser")){
+            //Step 3C: render the select user view and get user input request
 
             //set the current request to the result of the selectUser view and parse the response build by a processor
-            this.request = this.view.selectUser(response);
+            request = ((DashboardView)this.view).selectUser(response);
             //recall the process input method to calculate any new input from the user
-            this.processInput();
-        }
+            this.processInput(request);
 
-        //Step 3D: render the message view and get user input request
-        if(this.currentView.matches("message")){
+        }else if(this.currentView.matches("message")){
+            //Step 3D: render the message view and get user input request
+            //set the current request to the result of the message view and parse the response build by a processor
+            request = ((DashboardView)this.view).message(response);
+            //recall the process input method to calculate any new input from the user
+            this.processInput(request);
+
+        }else if(this.currentView.matches("import")){
+            //Step 3E: render the import messages from file and get the user input
 
             //set the current request to the result of the message view and parse the response build by a processor
-            this.request = this.view.message(response);
+            request = ((DashboardView)this.view).importMessages(response);
             //recall the process input method to calculate any new input from the user
-            this.processInput();
-        }
-
-        //Step 3E: render the import messages from file and get the user input
-        if(this.currentView.matches("import")){
-            //set the current request to the result of the message view and parse the response build by a processor
-            this.request = this.view.importMessages(response);
-            //recall the process input method to calculate any new input from the user
-            this.processInput();
+            this.processInput(request);
+        }else{
+            throw new InvalidViewException();
         }
     }
 }
