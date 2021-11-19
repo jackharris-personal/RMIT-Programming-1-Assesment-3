@@ -3,7 +3,7 @@ package com.jackgharris.rmit.cosc2135.models;
 
 //**** START CLASS ****\\
 //this is the message object class, these are created based on entries in the CSV and stored in the MessageModel class
-public class Message extends Model{
+public class Message{
 
     //set private final variables, these are instance variables that are final as they are set once by the constructor and never changed
     //String from variable, this is the username of the sender
