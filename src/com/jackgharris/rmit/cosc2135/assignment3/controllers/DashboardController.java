@@ -1,16 +1,14 @@
 //**** SET PACKAGE ****\\
-//Java packages are a way to uniquely name classes in a capacity that removes class naming conflicts, for example this project
-//is named under rmit.cosc2135.assessment2 whilst the first assessment was Packaged under rmit.cosc2135.assessment1.
-package com.jackgharris.rmit.cosc2135.controllers;
+package com.jackgharris.rmit.cosc2135.assignment3.controllers;
 
 //**** IMPORT PACKAGES ****\\
-//Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
-import com.jackgharris.rmit.cosc2135.core.CustomArray;
-import com.jackgharris.rmit.cosc2135.core.WhatsAppConsoleEdition;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidViewException;
-import com.jackgharris.rmit.cosc2135.models.MessageModel;
-import com.jackgharris.rmit.cosc2135.models.UserModel;
-import com.jackgharris.rmit.cosc2135.views.DashboardView;
+import com.jackgharris.rmit.cosc2135.assignment3.models.MessageModel;
+import com.jackgharris.rmit.cosc2135.assignment3.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.assignment3.core.WhatsAppConsoleEdition;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidUsernameException;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidViewException;
+import com.jackgharris.rmit.cosc2135.assignment3.models.UserModel;
+import com.jackgharris.rmit.cosc2135.assignment3.views.DashboardView;
 
 
 //**** CLASS START ****\\
@@ -24,27 +22,21 @@ public class DashboardController extends Controller{
     private final MessageModel messageModel;
     //UserModel private variable is used to retrieve all our users usernames and display them in the message user selector view
     private final UserModel userModel;
-    //declare our current view string
-    private String currentView;
-
-
 
     //**** DASHBOARD CONTROLLER CONSTRUCTOR METHOD ****\\
     //This method initialises all our protected and private variables that are required in this controller, in the case
     //of models it will load the model from the WhatsAppConsoleEdition, this is what allows us to have a single instance of each model.
-    public DashboardController(WhatsAppConsoleEdition whatsAppConsoleEdition, UserModel userModel, MessageModel messageModel) {
+    public DashboardController(WhatsAppConsoleEdition whatsAppConsoleEdition) {
+        //parse the instance of the main WhatsAppConsoleEdition class up to the parent
+        super(whatsAppConsoleEdition);
 
         //initialize the whatsAppConsoleEdition that's been parsed in via the constructor to the class variable of whatsAppConsoleEdition, this allows us
         //to call whatsAppConsoleEdition functions such as update view.
         this.whatsAppConsoleEdition = whatsAppConsoleEdition;
 
-        //initialize the user model to the singleton instance of our user model that we retrieve from our WhatsAppConsoleEdition,
-        //Note this also needs to be Cast into a UserModel from the default Model Parent, denoted by (Cast Type)
-        this.userModel = userModel;
-
-        //initialize the messageModel to our singleton instance of the message model that is retrieved from the whatsAppConsoleEdition
-        //Note just like our UserModel we are casting this into the correct instance type
-        this.messageModel = messageModel;
+        //initialize our models for this class by retrieving the singleton models from our main application
+        this.messageModel = (MessageModel) this.whatsAppConsoleEdition.getModel("messageModel");
+        this.userModel = (UserModel) this.whatsAppConsoleEdition.getModel("userModel");
 
         //initialize our protected view variable to a new instance of our Dashboard view, views do not get loaded from the
         //WhatsAppConsoleEdition as views only display data and return a request including a input string, they do not contain data that
@@ -61,7 +53,7 @@ public class DashboardController extends Controller{
     //and perform any model calls required to for fill the request of that view. We also first extract the user input from the
     //request at the start as well as create our response array ready to be returned back to the view.
     @Override
-    public void processInput(CustomArray request) {
+    protected void processInput(CustomArray request) {
         //First we set the input string to the request input string as provided by the View
         String input = (String) request.getValue("input");
 
@@ -85,8 +77,6 @@ public class DashboardController extends Controller{
                 response.add(this.whatsAppConsoleEdition.getCurrentUser().getUsername(),"currentUser");
                 //add the list of all users to the response to send back to the view
                 response.add(this.userModel.getAllUsers(),"users");
-                //finally rerender our view and parse the response we have created
-                this.whatsAppConsoleEdition.updateView(response);
 
                 //step 2 we check if our input matches 2, that would indicate we logout and proceed with the logout logic
             }else if(input.matches("2")){
@@ -98,21 +88,24 @@ public class DashboardController extends Controller{
                 response.add("Successfully Logged out","logout-message");
                 //parse a redirect trigger back to the login controller to cause it to redirect to the view specified
                 response.add("welcome","redirect");
-                //finally call the whatsAppConsoleEdition update view and parse it this response
-                this.whatsAppConsoleEdition.updateView(response);
 
-                //else if we reach this statement then the user has not input either 1 or 2 from the options then they have entered
-                //a invalid option, in that case we rerender the view and parse a error
+                //step 3 we check if the input matches 3, that would indicate they wish to import a new message file
             }else if(input.matches("3")){
 
-                this.currentView="import";
+                this.whatsAppConsoleEdition.setActiveController("admin");
+                response.add("menu","redirect");
                 this.whatsAppConsoleEdition.updateView(response);
+
             }else {
+                //else if we reach this statement then the user has not input either 1 or 2 or 3from the options then they have entered
+                //a invalid option, in that case we rerender the view and parse a error
                 //add the invalid selection error to the response
                 response.add("invalid selection", "error");
-                //recall our view update and parse our build response
-                this.whatsAppConsoleEdition.updateView(response);
+
             }
+
+            //finally rerender our view and parse the response we have created
+            this.whatsAppConsoleEdition.updateView(response);
         }
 
         //**** ALL USERS VIEW PROCESSING ****\\
@@ -154,10 +147,11 @@ public class DashboardController extends Controller{
         //**** SELECT USER VIEW PROCESSING ****\\
         //process the logic for the user selection view, this is the last view shown before we open our message view
         if(this.currentView.matches("selectUser")){
-            //check if the user has entered a valid username, if so proccede if not skip.
-            if(this.userModel.checkUsername(input)){
-                //set the current view to the message view
-                this.currentView = "message";
+
+            try{
+
+                this.userModel.checkUsername(input);
+
                 //add the current user to the response to be send to the view
                 response.add(this.whatsAppConsoleEdition.getCurrentUser().getUsername(), "currentUser");
                 //add the message target to the response to be send to the view, this is the username of the user your messaging
@@ -165,12 +159,15 @@ public class DashboardController extends Controller{
                 //call our getMessages method in our messagesModel class, this takes in our user, target user and response and
                 //adds the messages to the response before returning it.
                 response = this.messageModel.getMessages(this.whatsAppConsoleEdition.getCurrentUser().getUsername(), input, response);
-                //finally we recall our updateview method in the whatsAppConsoleEdition and parse this build response
-            }else{
-                //else this would indicate we have not selected a valid username and so we parse the invalid username selected error to the respone
-                response.add("invaid username selected","error");
-                //and recall this same view with that error parsed
+
+                //set the current view to the message view
+                this.currentView = "message";
+
+            } catch (InvalidUsernameException e) {
+                response.add(e.getMessage(),"error");
+                this.currentView = "selectUser";
             }
+
             this.whatsAppConsoleEdition.updateView(response);
         }
 
@@ -219,29 +216,6 @@ public class DashboardController extends Controller{
                 //recall our updateview method and parse this build response
                 this.whatsAppConsoleEdition.updateView(response);
             }
-        }
-
-        //**** IMPORT MESSAGES PROCESSING ****\\
-        //this method processing the import messages function, this accepts a path from the user and imports the messages
-        //from the CSV into the program
-        if(this.currentView.matches("import") ){
-            if(this.whatsAppConsoleEdition.getCurrentUser().getAdminStatus()) {
-                if (!input.isBlank()) {
-                    this.messageModel.load(input);
-                    if (!this.messageModel.getErrors().arrayKeyExists("error")) {
-                        response.add("csv file imported successfully", "importSuccess");
-                    } else {
-                        response.add(this.messageModel.getErrors().getValue("error"), "error");
-                    }
-                } else {
-                    response.add("file path cannot be empty", "error");
-                }
-            }else{
-                response.add("authentication error: import message function requires administration permissions", "error");
-            }
-            this.currentView = "home";
-
-            this.whatsAppConsoleEdition.updateView(response);
         }
     }
 
@@ -303,14 +277,7 @@ public class DashboardController extends Controller{
             //recall the process input method to calculate any new input from the user
             this.processInput(request);
 
-        }else if(this.currentView.matches("import")){
-            //Step 3E: render the import messages from file and get the user input
-
-            //set the current request to the result of the message view and parse the response build by a processor
-            request = ((DashboardView)this.view).importMessages(response);
-            //recall the process input method to calculate any new input from the user
-            this.processInput(request);
-        }else{
+        } else{
             throw new InvalidViewException();
         }
     }
