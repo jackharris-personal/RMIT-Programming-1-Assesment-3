@@ -1,10 +1,10 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.views;
+package com.jackgharris.rmit.cosc2135.assignment3.views;
 
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
-import com.jackgharris.rmit.cosc2135.core.CustomArray;
-import com.jackgharris.rmit.cosc2135.core.TextColors;
+import com.jackgharris.rmit.cosc2135.assignment3.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.assignment3.core.TextColors;
 
 import java.io.IOException;
 
@@ -22,12 +22,8 @@ public class DashboardView extends View{
         this.showTitle("Welcome: "+response.getValue("username"));
 
         //show a successfully logged in alert with the color green
-        this.showAlert("Successfully Logged In!",TextColors.textGreen);
+        this.showAlert("Successfully Logged In!", TextColors.textGreen);
 
-        //check if we have a import success key
-        if(response.arrayKeyExists("importSuccess")){
-            this.showAlert((String) response.getValue("importSuccess"), TextColors.textGreen);
-        }
 
         //check if we have any errors
         if(response.arrayKeyExists("error")){
@@ -39,7 +35,7 @@ public class DashboardView extends View{
         System.out.println("1) Message user");
         System.out.println("2) Logout");
         if(response.arrayKeyExists("isAdmin")) {
-            System.out.println("3) Import from file");
+            System.out.println("3) Admin menu");
         }
         System.out.println("\n");
 
@@ -205,40 +201,5 @@ public class DashboardView extends View{
         return request;
     }
 
-    //**** IMPORT MESSAGES FROM EXISTING FILE ****\\
-    //This method allows you to import messages from an existing file into this application
-    public CustomArray importMessages(CustomArray response){
-
-        //create the new request array, this is returned back from the view to the controller
-        CustomArray request = new CustomArray(String.class);
-
-        if(response.arrayKeyExists("isAdmin")) {
-
-            //show the title messages and append the target user of your message
-            this.showTitle("Import Messages: ");
-
-            //ask the user to enter the file path of the message they wish to import
-            System.out.println("\nPlease enter the file path of the messages.csv you wish to import");
-
-            //check if we have any errors
-            if (response.arrayKeyExists("error")) {
-                //if so show the errors and set the color to red for the error alert
-                this.showAlert((String) response.getValue("error"), TextColors.textRed);
-            }
-        }else{
-            this.showAlert("authentication error: import message function requires administration permissions", TextColors.textRed);
-        }
-
-        try {
-            //try setting the input to the input key value in the request response
-            request.add(this.br.readLine(),"input");
-        } catch (IOException e) {
-            //if that fails for any reason add the error to the request instead under the error key
-            request.add(e.toString(),"error");
-        }      //try and get the input from the user via the buffered reader using system.in
-
-        return request;
-
-    }
 
 }
