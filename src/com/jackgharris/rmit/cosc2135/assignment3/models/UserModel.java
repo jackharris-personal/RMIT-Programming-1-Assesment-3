@@ -1,13 +1,13 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.models;
+package com.jackgharris.rmit.cosc2135.assignment3.models;
 
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
-import com.jackgharris.rmit.cosc2135.core.CustomArray;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidFullnameException;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidPasswordException;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidUsernameException;
-import com.jackgharris.rmit.cosc2135.intefaces.Savable;
+import com.jackgharris.rmit.cosc2135.assignment3.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidFullnameException;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidPasswordException;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidUsernameException;
+import com.jackgharris.rmit.cosc2135.assignment3.intefaces.Savable;
 
 import java.io.*;
 import java.util.Objects;
@@ -30,16 +30,14 @@ public class UserModel extends Model implements Savable {
 
     //**** CHECK USERNAME METHOD ****\\
     //Check username method, returns true if it finds a matching user with the username provided
-    public boolean checkUsername(String username){
-        //create the outcome of the result and set it to false
-        boolean outcome = false;
+    public void checkUsername(String username) throws InvalidUsernameException {
+
         //check if the array key exists
-        if(this.users.arrayKeyExists(username)){
+        if(!this.users.arrayKeyExists(username)){
             //if so set the outcome to true
-            outcome = true;
+            throw new InvalidUsernameException();
         }
-        //finally return the outcome
-        return outcome;
+
     }
 
     //**** CHECK PASSWORD METHOD ****\\
@@ -89,7 +87,7 @@ public class UserModel extends Model implements Savable {
             }
         }
 
-        //finally we check if the unique match is false and the username is not null then the outcome is true
+        //finally we check to see if we have a unique match or if it is null, if so then we throw a InvalidUsernameException
         if(uniqueMatch || Objects.requireNonNull(username).isBlank()){
             throw new InvalidUsernameException();
         }
@@ -101,7 +99,7 @@ public class UserModel extends Model implements Savable {
 
         //check if the password is not null or blank
         if(password == null || password.isBlank()){
-            //if not then this is a valid password and set the outcome to true
+            //if the password is null or blank we throw a InvalidPasswordException
             throw new InvalidPasswordException();
         }
 
@@ -113,7 +111,7 @@ public class UserModel extends Model implements Savable {
 
         //check if the full name is not null and is not blank
         if(fullname == null || fullname.isBlank()){
-            //if so set the outcome to true;
+            //If the fullname is null or blank we throw a InvalidFullnameException
             throw new InvalidFullnameException();
         }
     }
@@ -145,6 +143,8 @@ public class UserModel extends Model implements Savable {
         return outcome;
     }
 
+    //**** IMPLEMENTS SAVE METHOD ****\\
+    //This method is the implementation of the save method implemented from the savable interface.
     @Override
     public void save(String path) {
 
@@ -186,6 +186,8 @@ public class UserModel extends Model implements Savable {
         }
     }
 
+    //**** IMPLEMENTS LOAD METHOD ****\\
+    //This method is the implementation of the load method implemented from the savable interface.
     @Override
     public void load(String path) {
 
@@ -205,8 +207,14 @@ public class UserModel extends Model implements Savable {
                 if(!line.contains("//")){
                     //split the lines values apart by the ,
                     String[] values = line.split(",");
-                    //create a user using the new values array and convert the
-                    users.add(new User(values[0],values[1],values[2],Integer.parseInt(values[3]),Boolean.parseBoolean(values[4])),values[0]);
+                    //create a user using the new values array and convert the and check if the user has the admin true variable or not
+                    if(Boolean.parseBoolean(values[4])){
+                        //if so create a new admin user
+                        users.add(new AdminUser(values[0], values[1], values[2], Integer.parseInt(values[3]), Boolean.parseBoolean(values[4])),values[0]);
+                    }else {
+                        //else create a standard user
+                        users.add(new User(values[0], values[1], values[2], Integer.parseInt(values[3]), Boolean.parseBoolean(values[4])), values[0]);
+                    }
                 }
             }
             //finally close our buffered reader
