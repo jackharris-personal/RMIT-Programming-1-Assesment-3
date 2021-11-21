@@ -1,5 +1,5 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.models;
+package com.jackgharris.rmit.cosc2135.assignment3.models;
 
 //**** START CLASS ****\\
 //this is the single instance of the user accounts that are created and managed by the UsersModel
