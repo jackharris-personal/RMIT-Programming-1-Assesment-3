@@ -1,10 +1,10 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.models;
+package com.jackgharris.rmit.cosc2135.assignment3.models;
 
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
-import com.jackgharris.rmit.cosc2135.core.CustomArray;
-import com.jackgharris.rmit.cosc2135.intefaces.Savable;
+import com.jackgharris.rmit.cosc2135.assignment3.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.assignment3.intefaces.Savable;
 
 import java.io.*;
 
@@ -62,6 +62,8 @@ public class MessageModel extends Model implements Savable {
     }
 
 
+    //**** IMPLEMENTS SAVE METHOD ****\\
+    //this method is the interface implementation of the save method from the Savable interface
     @Override
     public void save(String path) {
 
@@ -106,6 +108,8 @@ public class MessageModel extends Model implements Savable {
         }
     }
 
+    //**** IMPLEMENTS LOAD METHOD ****\\
+    //This method is the implementation of the load method implemented from the savable interface.
     @Override
     public void load(String path) {
         //create a new array of message
