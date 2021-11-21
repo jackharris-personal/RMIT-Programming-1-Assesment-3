@@ -1,4 +1,4 @@
-package com.jackgharris.rmit.cosc2135.core;
+package com.jackgharris.rmit.cosc2135.assignment3.core;
 
 //**** CUSTOM ARRAY CLASS ****\\
 //This class implements easy to use arrays based on the the requirement to use only basic Java arrays for this assessment,
