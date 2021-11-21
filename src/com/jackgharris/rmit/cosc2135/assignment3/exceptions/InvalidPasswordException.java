@@ -1,4 +1,4 @@
-package com.jackgharris.rmit.cosc2135.exceptions;
+package com.jackgharris.rmit.cosc2135.assignment3.exceptions;
 
 public class InvalidPasswordException extends Exception{
 
