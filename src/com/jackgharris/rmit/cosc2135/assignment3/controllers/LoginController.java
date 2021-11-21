@@ -1,18 +1,16 @@
 //**** SET PACKAGE ****\\
-//Java packages are a way to uniquely name classes in a capacity that removes class naming conflicts, for example this project
-//is named under rmit.cosc2135.assessment2 whilst the first assessment was Packaged under rmit.cosc2135.assessment1.
-package com.jackgharris.rmit.cosc2135.controllers;
+package com.jackgharris.rmit.cosc2135.assignment3.controllers;
 
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
-import com.jackgharris.rmit.cosc2135.core.CustomArray;
-import com.jackgharris.rmit.cosc2135.core.WhatsAppConsoleEdition;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidFullnameException;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidPasswordException;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidUsernameException;
-import com.jackgharris.rmit.cosc2135.exceptions.InvalidViewException;
-import com.jackgharris.rmit.cosc2135.models.UserModel;
-import com.jackgharris.rmit.cosc2135.views.LoginView;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidFullnameException;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidPasswordException;
+import com.jackgharris.rmit.cosc2135.assignment3.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.assignment3.core.WhatsAppConsoleEdition;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidUsernameException;
+import com.jackgharris.rmit.cosc2135.assignment3.exceptions.InvalidViewException;
+import com.jackgharris.rmit.cosc2135.assignment3.models.UserModel;
+import com.jackgharris.rmit.cosc2135.assignment3.views.LoginView;
 
 //**** CLASS START ****\\
 //Now we have imported our classes and declared our package name space we start our class contents
@@ -22,13 +20,14 @@ public class LoginController extends Controller{
     //-------------------------------------------------------------------------------------------
     //firstly we declare our Model for this controller, this is our Authentication Model,
     // that retrieves our array of users and validates user logins
-    private final UserModel model;
+    private final UserModel userModel;
 
     //**** LOGIN CONTROLLER CONSTRUCTOR METHOD ****\\
     //Our loginController constructor method accepts our main app object and is run at the creation of the
     //LoginController object, in this method we setup and create our View and Model object instances as well
     //as set our default current view and request array.
-    public LoginController(WhatsAppConsoleEdition whatsAppConsoleEdition, UserModel userModel) {
+    public LoginController(WhatsAppConsoleEdition whatsAppConsoleEdition) {
+        super(whatsAppConsoleEdition);
 
         //set the parsed WhatsAppConsoleEdition instance from the whatsAppConsoleEdition to the protected this.whatsAppConsoleEdition variable
         this.whatsAppConsoleEdition = whatsAppConsoleEdition;
@@ -37,7 +36,7 @@ public class LoginController extends Controller{
         this.view = new LoginView();
 
         //create the model and set it to the protected model variable inherited from the Parent Controller class
-        this.model = userModel;
+        this.userModel = (UserModel) this.whatsAppConsoleEdition.getModel("userModel");
 
         //set our default currentView method, this the subview that is loaded by default when the controller is called with out any
         //redirect variable being parsed. In this case we are setting it to our welcome subview
@@ -50,7 +49,7 @@ public class LoginController extends Controller{
     //and perform any model calls required to for fill the request of that view. We also first extract the user input from the
     //request at the start as well as create our response array ready to be returned back to the view.
     @Override
-    public void processInput(CustomArray request) {
+    protected void processInput(CustomArray request) {
 
         //First we set the input string to the request input string as provided by the View
         String input = (String) request.getValue("input");
@@ -59,8 +58,8 @@ public class LoginController extends Controller{
         CustomArray response = new CustomArray(String.class);
 
         //check if the model has throw any error, if so parse the error to the front end and display it
-        if(this.model.getErrors().arrayKeyExists("error")){
-        response.add(this.model.getErrors().getValue("error"), "error");
+        if(this.userModel.getErrors().arrayKeyExists("error")){
+        response.add(this.userModel.getErrors().getValue("error"), "error");
         }
 
         //**** WELCOME VIEW PROCESSING ****\\
@@ -100,20 +99,17 @@ public class LoginController extends Controller{
 
             //Step 1 we parse the input to the model checkUsername() function, this returns true or false to depending on if the input
             //provided was matches a valid user account or not
-            if (this.model.checkUsername(input)) {
 
-                //if so we change our view to the login view, and parse the provided username to the response to be packaged with our
-                //next view request
-                this.currentView = "loginPassword";
+                try{
+                    this.userModel.checkUsername(input);
+                    response.add(input, "username");
+                    this.currentView = "loginPassword";
 
-                //add validated username to response to be resent with next request including the password
-                response.add(input, "username");
+                } catch (InvalidUsernameException e) {
+                    response.add(e.getMessage(),"error");
+                    this.currentView = "login";
+                }
 
-            } else {
-                //else it means no valid username as been provided that matches a user account, so we add our error message to the response
-                //and finally rerender the view to the user.
-                response.add("invalid username","error");
-            }
             //finally rerender view
             this.whatsAppConsoleEdition.updateView(response);
         }
@@ -125,9 +121,9 @@ public class LoginController extends Controller{
 
             //Firstly we call the model check password method, and provide it the input from the new request and the username, saved
             //from the prior request
-            if (this.model.checkPassword((String) request.getValue("username"), input)) {
+            if (this.userModel.checkPassword((String) request.getValue("username"), input)) {
                 //if this is true we set the current user to that user by requesting the user from the Authentication model
-                this.whatsAppConsoleEdition.setCurrentUser(this.model.getUser((String) request.getValue("username")));
+                this.whatsAppConsoleEdition.setCurrentUser(this.userModel.getUser((String) request.getValue("username")));
                 //next we set the active controller to the dashboard
 
                 this.whatsAppConsoleEdition.setActiveController("dashboard");
@@ -165,7 +161,7 @@ public class LoginController extends Controller{
                //firstly on step 0 we are processing the username input, we validate this by calling our model validate username to check we dont have a duplicate
                try{
                    //call our validate username function, this will throw a InvalidUsernameError if the check fails
-                   this.model.validateNewUsername(input);
+                   this.userModel.validateNewUsername(input);
                    //if that succeeds and we have a valid username we add it to response
                    response.add(input,"username");
                    //then we increase our registration step to the next step
@@ -187,7 +183,7 @@ public class LoginController extends Controller{
             if(registrationStep == 1){
                 //parse our user input to the model validate password method, and if it returns true succeed
                 try{
-                    this.model.validatePassword(input);
+                    this.userModel.validatePassword(input);
                     //if its a valid password then parse the username from the request back to the response
                     response.add(request.getValue("username"),"username");
                     //next add the new validated password to the response
@@ -200,9 +196,11 @@ public class LoginController extends Controller{
                     registrationStep = 1;
                 }
 
+                //parse the last two requested variables back to the response
                 response.add(String.valueOf(registrationStep),"registrationStep");
                 response.add(request.getValue("username"),"username");
 
+                //recall our update view method
                 this.whatsAppConsoleEdition.updateView(response);
            }
 
@@ -211,7 +209,7 @@ public class LoginController extends Controller{
             if(registrationStep == 2){
                 //firstly we validate the input from the user to see if it meets the criteria of the full name validation, returns true if so
                 try {
-                    this.model.validateFullname(input);
+                    this.userModel.validateFullname(input);
 
                     //next we add our new validated fullname into the response
                     response.add(input,"fullname");
@@ -259,7 +257,7 @@ public class LoginController extends Controller{
                     //set the admin status, false always underless changed in csv
                     values.add(String.valueOf(false),"isAdmin");
                     //finally call the model createUserAccount and parse it the values
-                    this.model.createUserAccount(values);
+                    this.userModel.createUserAccount(values);
                     //then add the signup message to the response with the correct key for the front end to show
                     response.add("new user created!","signup-message");
                     //then recall our whatsAppConsoleEdition update view method and parse that response
