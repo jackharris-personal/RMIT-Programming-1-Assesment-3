@@ -102,15 +102,7 @@ public class ErrorController extends Controller{
             //process the request
             this.processInput(request);
 
-        //else render the 403 page and send the request to the process input method
-        }else if(this.currentView.matches("403")){
-
-            //get the request from the view
-            request = ((ErrorView)this.view).userForbidden(response);
-            //process the request
-            this.processInput(request);
-
-        }else{
+        } else{
             //else if none of the current views match those options we throw our invalid view exception error
             throw new InvalidViewException();
         }
