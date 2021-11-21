@@ -1,5 +1,5 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.core;
+package com.jackgharris.rmit.cosc2135.assignment3.core;
 
 //**** CLASS START ****\\
 //this text colors class is a class that only contains static final variables, these can be used by the views to color the
