@@ -1,5 +1,5 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.models;
+package com.jackgharris.rmit.cosc2135.assignment3.models;
 
 //**** START CLASS ****\\
 //this is the message object class, these are created based on entries in the CSV and stored in the MessageModel class
