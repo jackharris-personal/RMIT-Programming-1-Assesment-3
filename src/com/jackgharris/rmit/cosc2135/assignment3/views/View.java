@@ -1,12 +1,16 @@
-package com.jackgharris.rmit.cosc2135.views;
+//**** SET PACKAGE ****\\
+package com.jackgharris.rmit.cosc2135.assignment3.views;
 
-import com.jackgharris.rmit.cosc2135.core.TextColors;
-
+//**** IMPORT PACKAGES ****\\
+import com.jackgharris.rmit.cosc2135.assignment3.core.TextColors;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+//**** START CLASS ****\\
+//this is the main view class that all view objects extend, it contains showTitle, showAlert and the bufferedreader references
 public class View {
 
+    //create protected instance of buffered reader
     protected BufferedReader br;
 
     public View(){
