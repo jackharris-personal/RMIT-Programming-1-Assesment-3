@@ -1,10 +1,10 @@
 //**** SET PACKAGE ****\\
-package com.jackgharris.rmit.cosc2135.views;
+package com.jackgharris.rmit.cosc2135.assignment3.views;
 
 //**** IMPORT PACKAGES ****\\
 //Here we import all the relevant packages that we will be referencing, calling and accessing in this class.
-import com.jackgharris.rmit.cosc2135.core.CustomArray;
-import com.jackgharris.rmit.cosc2135.core.TextColors;
+import com.jackgharris.rmit.cosc2135.assignment3.core.CustomArray;
+import com.jackgharris.rmit.cosc2135.assignment3.core.TextColors;
 
 import java.io.IOException;
 
